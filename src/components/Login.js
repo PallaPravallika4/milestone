@@ -8,23 +8,41 @@ function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
+  const [errors, setErrors] = useState({ username: '', password: '' });
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!username.trim()) {
+      newErrors.username = 'Username is required.';
+    } else if (username.length < 3) {
+      newErrors.username = 'Username must be at least 3 characters long.';
+    }
+
+    if (!password.trim()) {
+      newErrors.password = 'Password is required.';
+    } else if (password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters long.';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
 
+    if (!validateForm()) {
+      setMessage('Please fix the errors before submitting.');
+      return;
+    }
+
     try {
-      // Send POST request to backend
       const response = await api.post('auth/login', { username, password });
-
-      // Extract user data from response
-      const user = response.data; // Assuming backend returns { id, name, role, ... }
-
+      const user = response.data;
       setMessage(`Welcome ${user.name || 'User'}! Redirecting to your dashboard...`);
-
-      // Save user data to localStorage (or Context API/Redux)
       localStorage.setItem('user', JSON.stringify(user));
 
-      // Redirect based on user role
       switch (user.role) {
         case 'ADMIN':
           navigate('/admin-dashboard');
@@ -36,10 +54,9 @@ function Login() {
           navigate('/patient-dashboard');
           break;
         default:
-          navigate('/home'); // Fallback for unknown roles
+          navigate('/home');
       }
     } catch (error) {
-      // Handle error
       const errorMessage =
         error.response?.data?.error || 'Login failed. Please check your credentials.';
       setMessage(errorMessage);
@@ -57,8 +74,9 @@ function Login() {
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             placeholder="Enter your username"
-            required
+            className={errors.username ? 'input-error' : ''}
           />
+          {errors.username && <span className="error-text">{errors.username}</span>}
         </div>
         <div className="form-group">
           <label>Password:</label>
@@ -67,8 +85,9 @@ function Login() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Enter your password"
-            required
+            className={errors.password ? 'input-error' : ''}
           />
+          {errors.password && <span className="error-text">{errors.password}</span>}
         </div>
         <button className="btn-primary" type="submit">
           Login

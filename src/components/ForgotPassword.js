@@ -6,11 +6,19 @@ import '../CSS/ForgotPassword.css';
 function ForgotPassword() {
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
   const handleForgotPassword = async (e) => {
     e.preventDefault();
+
+    // Email validation
+    if (!/\S+@\S+\.\S+/.test(email)) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+    setError(''); // Clear error message if validation passes
 
     try {
       setLoading(true);
@@ -32,8 +40,7 @@ function ForgotPassword() {
       const errorMessage =
         error.response?.data?.error || 'Failed to send reset password token';
       setMessage({ error: errorMessage });
-    }
-    finally {
+    } finally {
       setLoading(false);
     }
   };
@@ -51,11 +58,15 @@ function ForgotPassword() {
             placeholder="Enter your email"
             required
           />
+          {/* Validation error message */}
+          {error && <p className="error-text">{error}</p>}
         </div>
-        <button className="btn-primary" 
+        <button
+          className="btn-primary"
           type="submit"
-          disabled={loading}>
-            {loading? "OTP is being sent...": "Send OTP" }
+          disabled={loading}
+        >
+          {loading ? 'OTP is being sent...' : 'Send OTP'}
         </button>
       </form>
 
